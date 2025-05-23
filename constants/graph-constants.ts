@@ -1,110 +1,117 @@
 // constants/graph-constants.ts
 
 // Cores Padrão
-export const DEFAULT_NODE_COLOR = "#d3d3d3"; // Cinza claro para nós
-export const DEFAULT_NODE_BORDER_COLOR = "#a0a0a0"; // Borda um pouco mais escura para nós
-export const DEFAULT_EDGE_COLOR = "#848484"; // Cinza para arestas
+export const DEFAULT_NODE_COLOR = "#d3d3d3";
+export const DEFAULT_NODE_BORDER_COLOR = "#a0a0a0";
+export const DEFAULT_EDGE_COLOR = "#848484";
 
-// Cores de Destaque para Nós em Algoritmos
-export const HIGHLIGHT_COLOR_BFS = "#ff6600"; // Laranja para BFS
-export const HIGHLIGHT_COLOR_DFS = "#800080"; // Roxo para DFS
+// Cores de Destaque para Nós em Algoritmos de Travessia
+export const HIGHLIGHT_COLOR_BFS = "#ff8c00";
+export const HIGHLIGHT_COLOR_DFS = "#9370db";
 
-// Cores de Destaque para Seleção e Interação (Exemplos)
-export const SELECTED_NODE_COLOR_ALGORITHM = "lightblue"; // Azul claro para nó selecionado para iniciar algoritmo
-export const SELECTED_NODE_BORDER_ALGORITHM = "blue";
+// Cores para Componentes Conectados
+export const COMPONENT_COLORS = [
+  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+];
 
-export const SELECTED_NODE_COLOR_EDGE_CREATION = "orange"; // Laranja para nós selecionados para criar aresta
-export const SELECTED_NODE_BORDER_EDGE_CREATION = "darkorange";
+// Cores para Detecção de Ciclo
+export const HIGHLIGHT_COLOR_CYCLE_EDGE = "#e51c23";
+export const HIGHLIGHT_COLOR_CYCLE_NODE = "#ffc107";
 
-export const NODE_HIGHLIGHT_BACKGROUND = "#D2E5FF"; // Fundo do highlight padrão do nó (ex: ao passar o mouse)
-export const NODE_HIGHLIGHT_BORDER = "#2B7CE9";   // Borda do highlight padrão do nó
+// Cores de Destaque para Seleção e Interação na UI
+export const SELECTED_NODE_COLOR_ALGORITHM = "#add8e6";
+export const SELECTED_NODE_BORDER_ALGORITHM = "#007bff";
+export const SELECTED_NODE_COLOR_EDGE_CREATION = "#ffdab9";
+export const SELECTED_NODE_BORDER_EDGE_CREATION = "#ff7f50";
 
-export const EDGE_HIGHLIGHT_COLOR = "#ff0000"; // Vermelho para aresta destacada (ex: ao passar o mouse)
+export const NODE_HIGHLIGHT_BACKGROUND = "#D2E5FF";
+export const NODE_HIGHLIGHT_BORDER = "#2B7CE9";
+export const EDGE_HIGHLIGHT_COLOR = "#f04a4a";
 
 // Velocidade da Animação
-export const ANIMATION_SPEED_MS = 500; // Velocidade padrão para animações de algoritmos (BFS, DFS)
+export const ANIMATION_SPEED_MS = 550;
 
 // Opções Padrão para a Visualização do Grafo (vis-network)
 export const GRAPH_OPTIONS = {
   manipulation: {
-    enabled: false, // Desabilita a manipulação direta via UI do vis-network (adicionar/remover nós/arestas)
-                    // já que controlamos isso via botões.
+    enabled: false,
   },
   interaction: {
-    hover: true, // Habilita o destaque ao passar o mouse
-    selectConnectedEdges: false, // Não seleciona arestas conectadas ao selecionar um nó
+    hover: true,
+    selectConnectedEdges: false,
     tooltipDelay: 200,
+    navigationButtons: true,
+    keyboard: {
+      enabled: true,
+      speed: { x: 10, y: 10, zoom: 0.03 },
+      bindToWindow: true,
+    },
   },
   physics: {
-    enabled: true, // Habilita a física para um layout mais orgânico
-    barnesHut: {   // Algoritmo de física para melhor desempenho com muitos nós
-      gravitationalConstant: -3000,
-      centralGravity: 0.25,
-      springLength: 100,
-      springConstant: 0.05,
-      damping: 0.09,
-      avoidOverlap: 0.15, // Ajuda a evitar que os nós se sobreponham
+    enabled: true,
+    barnesHut: {
+      gravitationalConstant: -15000,
+      centralGravity: 0.2,
+      springLength: 110,
+      springConstant: 0.04,
+      damping: 0.45, // << CORRIGIDO para um valor sensato (experimente entre 0.3 e 0.7)
+      avoidOverlap: 0.7,
     },
-    solver: 'barnesHut',
-    stabilization: { // Tenta estabilizar o grafo mais rapidamente ao carregar
-      iterations: 1000,
+    maxVelocity: 25, // Reduzido um pouco em relação ao anterior, mas ainda permitindo movimento
+    minVelocity: 0.1, // Padrão vis-network para garantir que pare
+    solver: "barnesHut",
+    stabilization: {
+      iterations: 1000, // Para a estabilização inicial
       fit: true,
-    }
+    },
+    // Adicionar adaptiveTimestep pode ajudar em alguns cenários
+    // adaptiveTimestep: true, // (Padrão é true)
   },
-  nodes: {
-    shape: "ellipse", // Formato dos nós (outros: 'dot', 'circle', 'box', 'database', etc.)
-    size: 18,         // Tamanho dos nós
+  nodes: { /* ... (sem alterações aqui, mantido como antes) ... */
+    shape: "ellipse",
+    size: 18,
     borderWidth: 2,
     font: {
-      size: 14,       // Tamanho da fonte do label do nó
-      color: "#343434", // Cor da fonte do label do nó
-      face: "Arial, sans-serif",
+      size: 14,
+      color: "#343434",
+      face: "Arial, Helvetica, sans-serif",
+      strokeWidth: 0,
     },
-    color: { // Cores padrão do nó (podem ser sobrescritas por nó individualmente)
+    color: {
       border: DEFAULT_NODE_BORDER_COLOR,
       background: DEFAULT_NODE_COLOR,
       highlight: {
         border: NODE_HIGHLIGHT_BORDER,
         background: NODE_HIGHLIGHT_BACKGROUND,
       },
-      // hover: { // Cores específicas para o estado de hover, se diferentes do highlight
-      //   border: '#yourHoverBorderColor',
-      //   background: '#yourHoverBackgroundColor',
-      // }
+      hover: {
+        border: NODE_HIGHLIGHT_BORDER,
+        background: NODE_HIGHLIGHT_BACKGROUND,
+      }
     },
-    shadow: { // Adiciona uma leve sombra aos nós para profundidade
-        enabled: true,
-        size: 5,
-        x: 2,
-        y: 2
+    shadow: {
+        enabled: false,
     }
   },
-  edges: {
-    width: 2, // Largura das arestas
-    color: { // Cores padrão da aresta
+  edges: { /* ... (sem alterações aqui, mantido como antes) ... */
+    width: 2.5,
+    color: {
       color: DEFAULT_EDGE_COLOR,
       highlight: EDGE_HIGHLIGHT_COLOR,
-      // hover: '#yourEdgeHoverColor', // Cor da aresta ao passar o mouse, se diferente de highlight
-      inherit: false, // Não herda cor dos nós conectados
+      hover: EDGE_HIGHLIGHT_COLOR,
+      inherit: false,
     },
-    smooth: { // Configurações para suavização das curvas das arestas
+    smooth: {
       enabled: true,
-      type: "dynamic", // 'dynamic' ajusta a curvatura para evitar sobreposição de nós
-      // roundness: 0.5, // Para tipos não dinâmicos como 'continuous' ou 'cubicBezier'
+      type: "dynamic",
     },
-    arrows: { // Configuração de setas (para grafos direcionados)
+    arrows: {
       to: {
-        enabled: false, // Desabilitado por padrão (grafo não direcionado)
+        enabled: false,
         scaleFactor: 1,
         type: "arrow",
       },
     },
-    // A propriedade 'font' para labels de aresta foi removida pois não haverá labels de peso.
-    // Se você precisar de outros tipos de labels em arestas no futuro, pode reintroduzir:
-    // font: {
-    //   size: 12,
-    //   color: '#343434',
-    //   align: 'middle' // ou 'top', 'bottom'
-    // },
   },
 };

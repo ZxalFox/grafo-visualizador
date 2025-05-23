@@ -43,6 +43,7 @@ export function useGraphData(
   });
 
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [edgesDataSet, _setEdgesDataSet] = useState<EdgesDataSet>(() => {
     const edgesWithFullColor = initialEdges.map((e) => ({
       ...e, // Preserva id, from, to e outras propriedades de VisEdge
