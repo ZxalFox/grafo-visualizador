@@ -1,18 +1,23 @@
-// constants/graph-constants.ts
-
 // Cores Padrão
 export const DEFAULT_NODE_COLOR = "#d3d3d3";
 export const DEFAULT_NODE_BORDER_COLOR = "#a0a0a0";
 export const DEFAULT_EDGE_COLOR = "#848484";
 
-// Cores de Destaque para Nós em Algoritmos de Travessia
 export const HIGHLIGHT_COLOR_BFS = "#ff8c00";
 export const HIGHLIGHT_COLOR_DFS = "#9370db";
 
 // Cores para Componentes Conectados
 export const COMPONENT_COLORS = [
-  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+  "#1f77b4",
+  "#ff7f0e",
+  "#2ca02c",
+  "#d62728",
+  "#9467bd",
+  "#8c564b",
+  "#e377c2",
+  "#7f7f7f",
+  "#bcbd22",
+  "#17becf",
 ];
 
 // Cores para Detecção de Ciclo
@@ -51,24 +56,22 @@ export const GRAPH_OPTIONS = {
   physics: {
     enabled: true,
     barnesHut: {
-      gravitationalConstant: -15000,
-      centralGravity: 0.2,
-      springLength: 110,
-      springConstant: 0.04,
-      damping: 0.45, // << CORRIGIDO para um valor sensato (experimente entre 0.3 e 0.7)
-      avoidOverlap: 0.7,
+      gravitationalConstant: -10000,
+      centralGravity: 0.25,
+      springLength: 130,
+      springConstant: 0.035,
+      damping: 0.45,
+      avoidOverlap: 0.1,
     },
-    maxVelocity: 25, // Reduzido um pouco em relação ao anterior, mas ainda permitindo movimento
-    minVelocity: 0.1, // Padrão vis-network para garantir que pare
+    maxVelocity: 20,
+    minVelocity: 0.1,
     solver: "barnesHut",
     stabilization: {
-      iterations: 1000, // Para a estabilização inicial
+      iterations: 1000,
       fit: true,
     },
-    // Adicionar adaptiveTimestep pode ajudar em alguns cenários
-    // adaptiveTimestep: true, // (Padrão é true)
   },
-  nodes: { /* ... (sem alterações aqui, mantido como antes) ... */
+  nodes: {
     shape: "ellipse",
     size: 18,
     borderWidth: 2,
@@ -88,13 +91,13 @@ export const GRAPH_OPTIONS = {
       hover: {
         border: NODE_HIGHLIGHT_BORDER,
         background: NODE_HIGHLIGHT_BACKGROUND,
-      }
+      },
     },
     shadow: {
-        enabled: false,
-    }
+      enabled: false,
+    },
   },
-  edges: { /* ... (sem alterações aqui, mantido como antes) ... */
+  edges: {
     width: 2.5,
     color: {
       color: DEFAULT_EDGE_COLOR,

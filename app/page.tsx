@@ -1,35 +1,26 @@
-// app/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { IdType, Network } from "vis-network/peer";
-
-// Hooks customizados
+import { Network } from "vis-network/peer";
 import { useGraphData } from "@/hooks/use-graph-data";
 import { useGraphInteractions } from "@/hooks/use-graph-interactions";
-
-// Componentes da UI
 import GraphVisualization from "@/components/graph-visualization";
 import GraphEditorControls from "@/components/graph-editor-controls";
 import AlgorithmControls from "@/components/algorithm-controls";
-
-// Tipos customizados da aplicação
 import { Node, Edge, AlgorithmImplementation } from "@/types/graph-types";
 
-// Dados iniciais (grafo não ponderado)
+// Dados iniciais
 const initialNodesData: Node[] = [
-  { id: 1, label: "Nó A" },
-  { id: 2, label: "Nó B" },
-  { id: 3, label: "Nó C" },
-  { id: 4, label: "Nó D" },
-  { id: 5, label: "Nó E" }, // Nó para teste de componente desconexo
+  { id: 1, label: "Nó 1" },
+  { id: 2, label: "Nó 2" },
+  { id: 3, label: "Nó 3" },
+  { id: 4, label: "Nó 4" },
 ];
 
 const initialEdgesData: Edge[] = [
   { id: "1-2", from: 1, to: 2 },
   { id: "1-3", from: 1, to: 3 },
   { id: "2-4", from: 2, to: 4 },
-  // Aresta { id: "3-4", from: 3, to: 4 } removida para testar ciclo e componentes
 ];
 
 export default function HomePage() {
@@ -38,9 +29,9 @@ export default function HomePage() {
     edges,
     addNode,
     removeNode,
-    addEdge: addEdgeToDataSet, // Assinatura simplificada: (from, to) => void
+    addEdge: addEdgeToDataSet,
     removeLastEdge,
-    resetGraphVisuals: hardResetVisuals, // Assinatura simplificada: () => void
+    resetGraphVisuals: hardResetVisuals,
     clearGraph,
   } = useGraphData(initialNodesData, initialEdgesData);
 
@@ -53,7 +44,7 @@ export default function HomePage() {
     runAlgorithm: runAlgorithmFromHook,
     stopCurrentAlgorithm,
     setSelectedNodeId,
-    algorithmResultMessage, // Mensagem de resultado do algoritmo (do ajuste no hook)
+    algorithmResultMessage,
   } = useGraphInteractions({
     nodes,
     edges,
@@ -62,18 +53,16 @@ export default function HomePage() {
 
   const [networkInstance, setNetworkInstance] = useState<Network | null>(null);
 
-  // Wrapper para runAlgorithm para passar a chave/nome do algoritmo
   const runAlgorithm = useCallback(
     (algorithm: AlgorithmImplementation, algorithmKey: string) => {
-      // O startNodeId é o selectedNodeId, que pode ser null para Componentes Conectados
       runAlgorithmFromHook(algorithm, algorithmKey);
     },
-    [runAlgorithmFromHook]
+    [runAlgorithmFromHook],
   );
 
   const handleResetAll = useCallback(() => {
-    stopCurrentAlgorithm(); // Para algoritmo, reseta visuais e seleções internas
-    hardResetVisuals(); // Reseta cores do grafo para o padrão
+    stopCurrentAlgorithm();
+    hardResetVisuals();
     setSelectedNodeId(null);
     clearNodeSelectionForEdge();
     if (networkInstance) {
@@ -97,33 +86,73 @@ export default function HomePage() {
     };
   }, [isAlgorithmRunning, stopCurrentAlgorithm]);
 
-  const isGraphEmpty = nodes.length === 0; // Simplificado: se não há nós, não há arestas nos controles
+  const isGraphEmpty = nodes.length === 0;
 
   return (
-    <main className="container mx-auto px-4 py-6 lg:px-8 lg:py-8 space-y-8 min-h-screen bg-gradient-to-br from-slate-100 to-sky-100">
-      <header className="text-center">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-sky-800 tracking-tight">
-          Visualizador Interativo de Grafos
-        </h1>
-        <p className="mt-3 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
+    <main className="min-h-screen space-y-8 bg-yellow-100">
+      <header className="flex justify-around bg-amber-500 p-4 text-neutral-800">
+        <div className="flex flex-col justify-center">
+          <h1 className="code-text flex items-center text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            V_I_Grafo
+          </h1>
+          <p className="mt-2 font-bold">Visualizador Interativo de Grafos</p>
+        </div>
+        <p className="code-text mt-3 max-w-3xl text-end text-base sm:text-lg">
           Crie e manipule grafos. Explore visualmente algoritmos como Busca em
           Largura (BFS), Busca em Profundidade (DFS), Componentes Conectados e
           Detecção de Ciclos.
         </p>
       </header>
+      <div className="code-text mx-6 mt-10 rounded-lg border-2 border-yellow-600 bg-yellow-200 p-6 text-yellow-900 shadow">
+        <h3 className="mb-4 text-2xl font-semibold">Instruções de Uso</h3>
+        <ul className="list-inside list-disc space-y-2 pl-2">
+          <li>
+            <strong>Adicionar Nó:</strong> Use o botão &quot;Adicionar Nó&quot;.
+          </li>
+          <li>
+            <strong>Adicionar Aresta:</strong> Clique em um nó, depois clique em
+            outro nó distinto.
+          </li>
+          <li>
+            <strong>Limpar Seleção para Aresta:</strong> Se selecionou um nó
+            para criar uma aresta e deseja cancelar, clique em &quot;Limpar
+            Seleção&quot; ou clique novamente no nó selecionado.
+          </li>
+          <li>
+            <strong>Executar Algoritmo:</strong>
+            <ul className="mt-1 list-inside list-disc space-y-1 pl-4">
+              <li>
+                Para <strong>BFS, DFS e Detecção de Ciclo</strong>, primeiro
+                clique em um nó no grafo para defini-lo como ponto de partida.
+                Depois, clique no botão do algoritmo.
+              </li>
+              <li>
+                <strong>Componentes Conectados</strong> pode ser executado sem
+                um nó inicial pré-selecionado (ele analisará o grafo inteiro).
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Parar Algoritmo:</strong> Interrompe a animação do algoritmo
+            atual.
+          </li>
+          <li>
+            <strong>Resetar Visual:</strong> Limpa cores de destaque e seleções,
+            restaurando a aparência padrão do grafo.
+          </li>
+        </ul>
+      </div>
 
       {/* Mensagem de Resultado do Algoritmo */}
       {algorithmResultMessage && !isAlgorithmRunning && (
-        <div
-          className="mb-6 p-4 text-center text-sm rounded-md bg-sky-50 border-sky-300 border text-sky-700 shadow"
-          role="status"
-        >
-          {algorithmResultMessage}
+        <div className="code-text flex justify-center">
+          <div className="w-lg rounded-2xl border border-green-300 bg-green-50 p-4 text-center text-sm text-green-700 shadow">
+            {algorithmResultMessage}
+          </div>
         </div>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        <div className="lg:col-span-7 xl:col-span-8 rounded-xl shadow-2xl overflow-hidden bg-white">
+      <div className="grid grid-cols-1 items-start gap-6 px-6 lg:grid-cols-12 lg:gap-8">
+        <div className="overflow-hidden rounded-xl shadow-2xl lg:col-span-7 xl:col-span-8">
           <GraphVisualization
             nodes={nodes}
             edges={edges}
@@ -132,7 +161,7 @@ export default function HomePage() {
           />
         </div>
 
-        <aside className="lg:col-span-5 xl:col-span-4 space-y-6">
+        <aside className="space-y-6 lg:col-span-5 xl:col-span-4">
           <GraphEditorControls
             onAddNode={addNode}
             onRemoveNode={removeNode}
@@ -158,12 +187,12 @@ export default function HomePage() {
 
       {isAlgorithmRunning && (
         <div
-          className="fixed bottom-6 right-6 bg-sky-600 text-white px-6 py-3 rounded-lg shadow-xl animate-pulse z-50 flex items-center space-x-3"
+          className="fixed right-6 bottom-6 z-50 flex animate-pulse items-center space-x-3 rounded-lg bg-green-300 px-6 py-3 text-green-800 shadow-xl"
           role="alert"
           aria-live="assertive"
         >
           <svg
-            className="w-5 h-5 animate-spin"
+            className="h-5 w-5 animate-spin"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -186,53 +215,15 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="mt-10 p-6 bg-white border border-slate-200 rounded-lg shadow">
-        <h3 className="text-2xl font-semibold mb-4 text-slate-700">
-          Instruções de Uso
-        </h3>
-        <ul className="list-disc list-inside text-slate-600 space-y-2 pl-2">
-          <li>
-            <strong>Adicionar Nó:</strong> Use o botão "Adicionar Nó".
-          </li>
-          <li>
-            <strong>Adicionar Aresta:</strong> Clique em um nó, depois clique em
-            outro nó distinto.
-          </li>
-          <li>
-            <strong>Limpar Seleção para Aresta:</strong> Se selecionou um nó
-            para criar uma aresta e deseja cancelar, clique em "Limpar Seleção"
-            ou clique novamente no nó selecionado.
-          </li>
-          <li>
-            <strong>Executar Algoritmo:</strong>
-            <ul className="list-['◦'] list-inside pl-4 mt-1 space-y-1">
-              <li>
-                Para <strong>BFS, DFS e Detecção de Ciclo</strong>, primeiro
-                clique em um nó no grafo para defini-lo como ponto de partida.
-                Depois, clique no botão do algoritmo.
-              </li>
-              <li>
-                <strong>Componentes Conectados</strong> pode ser executado sem
-                um nó inicial pré-selecionado (ele analisará o grafo inteiro).
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Parar Algoritmo:</strong> Interrompe a animação do algoritmo
-            atual.
-          </li>
-          <li>
-            <strong>Resetar Visual:</strong> Limpa cores de destaque e seleções,
-            restaurando a aparência padrão do grafo.
-          </li>
-        </ul>
-      </div>
-
-      <footer className="text-center py-10 text-sm text-slate-500">
-        <p>
-          Ferramenta de aprendizado de Algoritmos em Grafos. Explore e
-          divirta-se!
-        </p>
+      <footer className="space-y-2 bg-amber-800 py-6 text-center text-sm">
+        <div>
+          <p>V_I_Grafos</p>
+          <p>Visualizador Interativo de Grafo</p>
+        </div>
+        <div>
+          <p>Desenvolvido por Ayron Sanfra sem fins lucrativos</p>
+          <p>2025</p>
+        </div>
       </footer>
     </main>
   );

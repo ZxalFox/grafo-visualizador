@@ -1,11 +1,10 @@
-// components/algorithm-controls.tsx
 import React from "react";
-import Button from "./ui/button"; // Seu componente de botão Tailwind estilizado
+import Button from "./ui/button";
 import { AlgorithmImplementation } from "@/types/graph-types";
 import { bfs } from "@/lib/algorithms/bfs";
 import { dfs } from "@/lib/algorithms/dfs";
-import { findConnectedComponents } from "@/lib/algorithms/connected-components"; // Novo
-import { detectCycle } from "@/lib/algorithms/cycle-detection"; // Novo
+import { findConnectedComponents } from "@/lib/algorithms/connected-components";
+import { detectCycle } from "@/lib/algorithms/cycle-detection";
 
 interface AlgorithmControlsProps {
   onRunAlgorithm: (
@@ -18,13 +17,13 @@ interface AlgorithmControlsProps {
   selectedNodeId: string | number | null;
 }
 
-// Lista dos algoritmos disponíveis atualizada
+// Lista dos algoritmos disponíveis
 const availableAlgorithms = [
   {
     key: "BFS",
     displayName: "Busca em Largura (BFS)",
     fn: bfs,
-    requiresStartNode: true, // Indica se um nó inicial é obrigatório
+    requiresStartNode: true,
   },
   {
     key: "DFS",
@@ -36,13 +35,13 @@ const availableAlgorithms = [
     key: "CONNECTED_COMPONENTS",
     displayName: "Componentes Conectados",
     fn: findConnectedComponents,
-    requiresStartNode: false, // Não necessita de nó inicial (processa o grafo todo)
+    requiresStartNode: false,
   },
   {
     key: "CYCLE_DETECTION",
     displayName: "Detectar Ciclo",
     fn: detectCycle,
-    requiresStartNode: true, // Nossa implementação atual pede um nó inicial
+    requiresStartNode: true,
   },
 ];
 
@@ -54,33 +53,32 @@ const AlgorithmControls: React.FC<AlgorithmControlsProps> = ({
   selectedNodeId,
 }) => {
   return (
-    <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-md space-y-3">
-      <h3 className="text-xl font-semibold text-slate-700 mb-4">
+    <div className="p-4 code-text bg-amber-500 border-2 border-amber-600 rounded-lg shadow-md space-y-3">
+      <h3 className="text-xl font-semibold text-neutral-800 mb-4">
         Executar Algoritmos
       </h3>
 
       {/* Feedback sobre seleção de nó e estado de execução */}
       {!isAlgorithmRunning && selectedNodeId === null && (
-        <p className="text-sm text-slate-500 mb-2 px-1">
-          Selecione um nó inicial para BFS, DFS ou Detecção de Ciclo. <br />
-          "Componentes Conectados" pode ser executado sem nó inicial.
+        <p className="text-sm text-neutral-800 mb-2 px-1">
+          Selecione um nó inicial para BFS, DFS ou Detecção de Ciclo.
+          &quot;Componentes Conectados&quot; pode ser executado sem nó inicial.
         </p>
       )}
       {!isAlgorithmRunning && selectedNodeId !== null && (
-        <p className="text-sm text-sky-700 mb-2 px-1">
+        <p className="text-sm text-neutral-800 mb-2 px-1">
           Nó inicial para algoritmos selecionado:{" "}
           <span className="font-bold">{selectedNodeId}</span>.
         </p>
       )}
       {isAlgorithmRunning && (
-        <p className="text-sm text-orange-600 animate-pulse mb-2 px-1">
+        <p className="text-sm text-neutral-800 animate-pulse mb-2 px-1">
           Algoritmo em execução...
         </p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {availableAlgorithms.map((algo) => {
-          // Determina se o botão deve estar desabilitado
           const isDisabled =
             isAlgorithmRunning ||
             (algo.requiresStartNode && selectedNodeId === null);
@@ -90,7 +88,7 @@ const AlgorithmControls: React.FC<AlgorithmControlsProps> = ({
               key={algo.key}
               onClick={() => onRunAlgorithm(algo.fn, algo.key)}
               disabled={isDisabled}
-              className="w-full text-sm" // Ajustado tamanho da fonte para caber melhor
+              className="w-full text-sm"
               aria-label={`Executar o algoritmo: ${algo.displayName}`}
             >
               {algo.displayName}

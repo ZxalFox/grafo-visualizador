@@ -1,31 +1,24 @@
-// hooks/use-graph-data.ts
 import { useState, useCallback } from "react";
 import { DataSet } from "vis-data/peer";
-import {
-  Node,
-  Edge, // Este tipo Edge já foi simplificado (sem weight/label de peso)
-  NodesDataSet,
-  EdgesDataSet,
-} from "../types/graph-types"; // Ajuste o caminho se necessário
+import { Node, Edge, NodesDataSet, EdgesDataSet } from "../types/graph-types";
 import {
   DEFAULT_NODE_COLOR,
   DEFAULT_NODE_BORDER_COLOR,
   DEFAULT_EDGE_COLOR,
-  NODE_HIGHLIGHT_BACKGROUND, // Importado de constants
-  NODE_HIGHLIGHT_BORDER, // Importado de constants
-  EDGE_HIGHLIGHT_COLOR, // Importado de constants
-} from "@/constants/graph-constants"; // Ajuste o caminho se necessário
+  NODE_HIGHLIGHT_BACKGROUND,
+  NODE_HIGHLIGHT_BORDER,
+  EDGE_HIGHLIGHT_COLOR,
+} from "@/constants/graph-constants";
 import { IdType } from "vis-network";
-import { resetAllVisuals as utilResetAllVisuals } from "@/lib/graph-utils"; // Importando o utilitário
+import { resetAllVisuals as utilResetAllVisuals } from "@/lib/graph-utils";
 
 export function useGraphData(
   initialNodes: Node[] = [],
-  initialEdges: Edge[] = [] // Edge[] agora é do tipo simplificado
+  initialEdges: Edge[] = [],
 ) {
   const [nodesDataSet] = useState<NodesDataSet>(() => {
     const nodesWithFullColor = initialNodes.map((n) => ({
-      ...n, // Preserva id, label e outras propriedades de VisNodeOriginal
-      // Garante que a estrutura de cor esteja completa conforme nossa definição de Node
+      ...n,
       color:
         typeof n.color === "string"
           ? n.color // Se a cor inicial for uma string, usa-a
@@ -42,12 +35,10 @@ export function useGraphData(
     return new DataSet<Node, "id">(nodesWithFullColor);
   });
 
-  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [edgesDataSet, _setEdgesDataSet] = useState<EdgesDataSet>(() => {
     const edgesWithFullColor = initialEdges.map((e) => ({
-      ...e, // Preserva id, from, to e outras propriedades de VisEdge
-      // Garante que a estrutura de cor esteja completa
+      ...e,
       color:
         typeof e.color === "string"
           ? e.color
@@ -55,7 +46,7 @@ export function useGraphData(
               color: e.color?.color || DEFAULT_EDGE_COLOR,
               highlight: e.color?.highlight || EDGE_HIGHLIGHT_COLOR,
             },
-      label: undefined, // Garante que não haja labels de peso nas arestas iniciais
+      label: undefined,
     }));
     return new DataSet<Edge, "id">(edgesWithFullColor);
   });
@@ -63,25 +54,47 @@ export function useGraphData(
   const nodes = nodesDataSet;
   const edges = edgesDataSet;
 
-  const addNode = useCallback(() => {
-    const currentNodesArray = nodes.get(); // Retorna todos os nós como um array
-    const newId =
-      currentNodesArray.length > 0
-        ? Math.max(0, ...currentNodesArray.map((n) => Number(n.id))) + 1
-        : 1;
-    nodes.add({
-      id: newId,
-      label: `Nó ${newId}`, // Label obrigatório pela nossa interface Node
-      color: {
-        background: DEFAULT_NODE_COLOR,
-        border: DEFAULT_NODE_BORDER_COLOR,
-        highlight: {
-          background: NODE_HIGHLIGHT_BACKGROUND,
-          border: NODE_HIGHLIGHT_BORDER,
+  const addNode = useCallback(
+    (position?: { x: number; y: number }) => {
+      const currentNodesArray = nodes.get();
+      const newId =
+        currentNodesArray.length > 0
+          ? Math.max(0, ...currentNodesArray.map((n) => Number(n.id))) + 1
+          : 1;
+
+      const newNodeData: Node = {
+        id: newId,
+        label: `Nó ${newId}`,
+        color: {
+          background: DEFAULT_NODE_COLOR,
+          border: DEFAULT_NODE_BORDER_COLOR,
+          highlight: {
+            background: NODE_HIGHLIGHT_BACKGROUND,
+            border: NODE_HIGHLIGHT_BORDER,
+          },
         },
-      },
-    });
-  }, [nodes]);
+      };
+
+      if (position) {
+        newNodeData.x = position.x;
+        newNodeData.y = position.y;
+        newNodeData.fixed = { x: true, y: true };
+      }
+
+      nodes.add(newNodeData);
+
+      //Soltar o nó após um pequeno delay
+      if (position) {
+        setTimeout(() => {
+          // Verifica se o nó ainda existe antes de tentar atualizar
+          if (nodes.get(newId)) {
+            nodes.update({ id: newId, fixed: { x: false, y: false } });
+          }
+        }, 150);
+      }
+    },
+    [nodes],
+  );
 
   const removeNode = useCallback(() => {
     const allNodesArray = nodes.get({ order: "id" });
@@ -97,11 +110,10 @@ export function useGraphData(
         edge.from === nodeToRemove.id || edge.to === nodeToRemove.id,
     });
     if (connectedEdgesArray.length > 0) {
-      edges.remove(connectedEdgesArray.map((edge) => edge.id as IdType)); // Cast para IdType se necessário
+      edges.remove(connectedEdgesArray.map((edge) => edge.id as IdType));
     }
   }, [nodes, edges]);
 
-  // addEdge simplificado: sem weight, sem showWeightsGlobally
   const addEdge = useCallback(
     (from: IdType, to: IdType) => {
       const edgeExists =
@@ -113,25 +125,23 @@ export function useGraphData(
 
       if (from === to || edgeExists) {
         console.warn(
-          "addEdge: Tentativa de adicionar auto-loop ou aresta duplicada."
+          "addEdge: Tentativa de adicionar auto-loop ou aresta duplicada.",
         );
         return;
       }
 
-      // ID da aresta continua sendo uma string "menorId-maiorId"
       const edgeId = [from, to].sort((a, b) => Number(a) - Number(b)).join("-");
       edges.add({
         id: edgeId,
         from,
         to,
-        // Nenhuma propriedade 'weight' ou 'label' para peso aqui
         color: {
           color: DEFAULT_EDGE_COLOR,
           highlight: EDGE_HIGHLIGHT_COLOR,
         },
       });
     },
-    [edges]
+    [edges],
   );
 
   const removeLastEdge = useCallback(() => {
@@ -142,8 +152,6 @@ export function useGraphData(
     edges.remove(lastEdge.id);
   }, [edges]);
 
-  // resetGraphVisuals agora não precisa mais do parâmetro showWeightsAfterReset
-  // Ele simplesmente chama o utilitário de lib/graph-utils.ts
   const resetGraphVisuals = useCallback(() => {
     utilResetAllVisuals(nodes, edges);
   }, [nodes, edges]);
@@ -158,10 +166,9 @@ export function useGraphData(
     edges,
     addNode,
     removeNode,
-    addEdge, // Assinatura simplificada
+    addEdge,
     removeLastEdge,
-    resetGraphVisuals, // Comportamento simplificado
+    resetGraphVisuals,
     clearGraph,
-    // updateEdgeWeight e toggleAllEdgeLabels foram removidos
   };
 }

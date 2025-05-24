@@ -1,10 +1,9 @@
-// lib/algorithms/connected-components.ts
 import { IdType } from "vis-network";
 import {
   COMPONENT_COLORS,
   NODE_HIGHLIGHT_BORDER,
   NODE_HIGHLIGHT_BACKGROUND,
-} from "@/constants/graph-constants"; // Paleta de cores para os componentes
+} from "@/constants/graph-constants";
 import { getNeighbors } from "@/lib/graph-utils";
 import { AlgorithmImplementation } from "@/types/graph-types";
 
@@ -12,7 +11,7 @@ export const findConnectedComponents: AlgorithmImplementation = (
   nodes,
   edges,
   _startNodeId, // O nó inicial não é estritamente necessário, o algoritmo varre todos os nós
-  { animationSpeed, updateNodeVisual, onAlgorithmComplete }
+  { animationSpeed, updateNodeVisual, onAlgorithmComplete },
 ) => {
   const visited = new Set<IdType>(); // Nós já visitados em alguma travessia de componente
   let componentCount = 0;
@@ -49,15 +48,12 @@ export const findConnectedComponents: AlgorithmImplementation = (
             // Atualiza o visual
             color: {
               background: currentComponentColor,
-              border: currentComponentColor, // Pode ser uma borda diferente se preferir
+              border: currentComponentColor,
               highlight: {
-                // Highlight consistente
                 background: NODE_HIGHLIGHT_BACKGROUND,
                 border: NODE_HIGHLIGHT_BORDER,
               },
             },
-            // A propriedade 'component' é atualizada no DataSet, não precisa ser em 'updates' visuais
-            // a menos que queira exibir no label do nó, o que exigiria mais lógica.
           });
         }
       }
@@ -117,7 +113,6 @@ export const findConnectedComponents: AlgorithmImplementation = (
 
   // Inicia a animação
   // Reseta visuais antes de começar, caso haja estados anteriores
-  // resetAllVisuals(nodes, edges); // Isso já deve ser feito pelo useGraphInteractions
   intervalId = setInterval(step, animationSpeed);
 
   return {

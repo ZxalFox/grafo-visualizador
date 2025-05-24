@@ -1,13 +1,11 @@
-// lib/algorithms/cycle-detection.ts
 import { IdType } from "vis-network";
 import {
   HIGHLIGHT_COLOR_DFS,
   HIGHLIGHT_COLOR_CYCLE_EDGE,
-  // HIGHLIGHT_COLOR_CYCLE_NODE, // Descomente se for usar
   NODE_HIGHLIGHT_BACKGROUND,
   NODE_HIGHLIGHT_BORDER,
-  EDGE_HIGHLIGHT_COLOR, // Para resetar o highlight da aresta
-  DEFAULT_EDGE_COLOR, // Para resetar a cor principal da aresta
+  EDGE_HIGHLIGHT_COLOR, 
+  DEFAULT_EDGE_COLOR, 
 } from "@/constants/graph-constants";
 import { getNeighbors } from "@/lib/graph-utils";
 import { AlgorithmImplementation } from "@/types/graph-types";
@@ -65,8 +63,7 @@ export const detectCycle: AlgorithmImplementation = (
       return;
     }
 
-    const u = dfsStack[dfsStack.length - 1]; // Peek
-
+    const u = dfsStack[dfsStack.length - 1]; 
     if (!visited.has(u)) {
       visited.add(u);
       updateNodeVisual(u, {
@@ -152,14 +149,11 @@ export const detectCycle: AlgorithmImplementation = (
         clearInterval(intervalId);
         intervalId = null;
       }
-      // CORRIGIDO: Usa Array.filter após obter todas as arestas
       const highlightedEdges = edges
         .get()
         .filter((edge) => edge.isHighlighted === true);
 
       highlightedEdges.forEach((edge) => {
-        // Apenas o ID é necessário para edges.update se edge.id for string
-        // Se o seu DataSet de arestas usa 'id' como campo de ID, e edge.id é string.
         if (typeof edge.id === "string") {
           updateEdgeVisual(edge.id, {
             isHighlighted: false,

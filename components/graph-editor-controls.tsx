@@ -1,15 +1,14 @@
-// components/graph-editor-controls.tsx
 import React from "react";
-import Button from "./ui/button"; // Seu componente de botão Tailwind estilizado
+import Button from "./ui/button";
 
 interface GraphEditorControlsProps {
   onAddNode: () => void;
   onRemoveNode: () => void;
   onRemoveLastEdge: () => void;
-  onClearSelection: () => void; // Para limpar a seleção de nós para uma nova aresta
+  onClearSelection: () => void;
   onClearGraph: () => void;
-  nodesForNewEdgeCount: number; // Para dar feedback visual ao usuário (ex: "Selecionado 1/2 nós")
-  isGraphEmpty: boolean; // Para desabilitar botões de remoção se o grafo estiver vazio
+  nodesForNewEdgeCount: number;
+  isGraphEmpty: boolean;
 }
 
 const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
@@ -22,8 +21,8 @@ const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
   isGraphEmpty,
 }) => {
   return (
-    <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-md space-y-3">
-      <h3 className="text-xl font-semibold text-slate-700 mb-4">
+    <div className="p-4 bg-amber-500 border-2 border-amber-600 rounded-lg shadow-md space-y-3">
+      <h3 className="text-xl font-semibold text-neutral-800 mb-4">
         Controles do Grafo
       </h3>
       <div className="grid grid-cols-2 gap-3">
@@ -32,9 +31,9 @@ const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
         </Button>
         <Button
           onClick={onRemoveNode}
-          variant="outline" // Mudado para outline para diferenciar de "Limpar Grafo"
+          variant="outline"
           className="w-full"
-          disabled={isGraphEmpty} // Desabilita se não houver nós para remover
+          disabled={isGraphEmpty}
           aria-label="Remover o último nó adicionado"
         >
           Remover Nó
@@ -43,7 +42,7 @@ const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
           onClick={onRemoveLastEdge}
           variant="outline"
           className="w-full"
-          disabled={isGraphEmpty} // Ou uma verificação mais específica se há arestas
+          disabled={isGraphEmpty}
           aria-label="Remover a última aresta adicionada"
         >
           Remover Aresta
@@ -51,7 +50,7 @@ const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
         <Button
           onClick={onClearSelection}
           className="w-full"
-          disabled={nodesForNewEdgeCount === 0} // Desabilita se não houver seleção para limpar
+          disabled={nodesForNewEdgeCount === 0}
           aria-label="Limpar seleção de nós para criar nova aresta"
         >
           Limpar Seleção ({nodesForNewEdgeCount}/2)
@@ -60,9 +59,9 @@ const GraphEditorControls: React.FC<GraphEditorControlsProps> = ({
       <div className="pt-3 mt-3 border-t border-slate-200">
         <Button
           onClick={onClearGraph}
-          variant="destructive" // Cor destrutiva para uma ação impactante
+          variant="destructive"
           className="w-full"
-          disabled={isGraphEmpty} // Desabilita se o grafo já estiver limpo
+          disabled={isGraphEmpty}
           aria-label="Remover todos os nós e arestas do grafo"
         >
           Limpar Grafo

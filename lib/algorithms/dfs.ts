@@ -1,18 +1,19 @@
-// lib/algorithms/dfs.ts
 import { IdType } from "vis-network";
 import { HIGHLIGHT_COLOR_DFS } from "@/constants/graph-constants";
-import { getNeighbors } from "@/lib/graph-utils"; // Assumindo que getNeighbors será mantido/adaptado
+import { getNeighbors } from "@/lib/graph-utils";
 import { AlgorithmImplementation } from "@/types/graph-types";
 
 export const dfs: AlgorithmImplementation = (
   nodes,
   edges,
   startNodeId,
-  { animationSpeed, updateNodeVisual, onAlgorithmComplete }
+  { animationSpeed, updateNodeVisual, onAlgorithmComplete },
 ) => {
   // Validação do nó inicial
   if (!startNodeId || !nodes.get(startNodeId)) {
-    console.error("DFS Error: Start node is invalid or not found in the graph.");
+    console.error(
+      "DFS Error: Start node is invalid or not found in the graph.",
+    );
     if (typeof onAlgorithmComplete === "function") {
       onAlgorithmComplete();
     }
@@ -20,7 +21,7 @@ export const dfs: AlgorithmImplementation = (
   }
 
   const visited = new Set<IdType>();
-  const stack: IdType[] = []; // Usamos uma pilha para DFS iterativo
+  const stack: IdType[] = []; // Usando uma pilha para DFS iterativo
   let intervalId: NodeJS.Timeout | null = null;
 
   // Adiciona o nó inicial à pilha
@@ -36,12 +37,13 @@ export const dfs: AlgorithmImplementation = (
     }
 
     const currentProcessingNodeId = stack.pop(); // Pega do topo da pilha
-    if (!currentProcessingNodeId) { // Verificação de segurança
-        if (intervalId) clearInterval(intervalId);
-        if (typeof onAlgorithmComplete === "function") {
-            onAlgorithmComplete();
-        }
-        return;
+    if (!currentProcessingNodeId) {
+      // Verificação de segurança
+      if (intervalId) clearInterval(intervalId);
+      if (typeof onAlgorithmComplete === "function") {
+        onAlgorithmComplete();
+      }
+      return;
     }
 
     if (!visited.has(currentProcessingNodeId)) {
@@ -49,14 +51,14 @@ export const dfs: AlgorithmImplementation = (
 
       // Atualiza visualmente o nó ao ser visitado
       updateNodeVisual(currentProcessingNodeId, {
-        color: { // Estrutura de cor completa
+        color: {
+          background: HIGHLIGHT_COLOR_DFS,
+          border: HIGHLIGHT_COLOR_DFS,
+          highlight: {
             background: HIGHLIGHT_COLOR_DFS,
-            border: HIGHLIGHT_COLOR_DFS, // Ou uma cor de borda específica para DFS
-            highlight: { // Usando placeholders, idealmente seriam constantes
-                background: HIGHLIGHT_COLOR_DFS, // Ou um highlight específico para DFS
-                border: HIGHLIGHT_COLOR_DFS,     // Ou um highlight específico para DFS
-            }
-        }
+            border: HIGHLIGHT_COLOR_DFS,
+          },
+        },
       });
 
       const neighbors = getNeighbors(currentProcessingNodeId, edges);

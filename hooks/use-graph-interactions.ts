@@ -1,4 +1,3 @@
-// hooks/use-graph-interactions.ts
 import { useState, useCallback, useRef, useEffect } from "react";
 import { IdType } from "vis-network";
 import {
@@ -58,120 +57,115 @@ export function useGraphInteractions({
         },
       });
     },
-    [nodes]
+    [nodes],
   );
 
   const handleNodeClick = useCallback(
     (clickedNodeId: IdType) => {
-      if (isAlgorithmRunning) {
-        console.log("handleNodeClick: Algoritmo em execução, clique ignorado.");
-        return;
-      }
+      if (isAlgorithmRunning) return;
+      setAlgorithmResultMessage(null);
 
-      setAlgorithmResultMessage(null); // Limpa mensagens anteriores
+      // Captura os estados anteriores para comparação
+      const prevNodesForEdge = [...nodesForNewEdge];
+      const prevSelectedNodeIdForAlgo = selectedNodeIdForAlgorithm;
 
-      // Para evitar ler selectedNodeIdForAlgorithm obsoleto dentro do updater do setNodesForNewEdge,
-      // vamos calcular o próximo estado de ambos e depois atualizar os visuais.
-      // Primeiro, calculamos qual seria o próximo estado de nodesForNewEdge.
-      let nextNodesForEdge: IdType[];
-      const currentNodesForEdge = nodesForNewEdge; // Pega o valor atual do estado
-
-      if (currentNodesForEdge.includes(clickedNodeId)) {
-        nextNodesForEdge = currentNodesForEdge.filter(
-          (id) => id !== clickedNodeId
+      // Calcula os próximos estados
+      let nextNodesForEdgeArray: IdType[];
+      if (prevNodesForEdge.includes(clickedNodeId)) {
+        nextNodesForEdgeArray = prevNodesForEdge.filter(
+          (id) => id !== clickedNodeId,
         );
       } else {
-        nextNodesForEdge = [...currentNodesForEdge, clickedNodeId];
-        if (nextNodesForEdge.length > 2) {
-          // Não deve permitir mais de 2, mas como segurança
-          nextNodesForEdge = [nextNodesForEdge[0], clickedNodeId]; // Mantém o primeiro e o clicado
+        nextNodesForEdgeArray = [...prevNodesForEdge, clickedNodeId];
+        if (nextNodesForEdgeArray.length > 2) {
+          // Garante no máximo 2 nós para uma aresta
+          // Mantém o primeiro nó selecionado e o nó clicado atualmente
+          nextNodesForEdgeArray = [
+            prevNodesForEdge[0] || clickedNodeId,
+            clickedNodeId,
+          ];
         }
       }
 
-      // Agora, com base no nextNodesForEdge, determinamos o nextSelectedNodeIdForAlgorithm
-      // e se uma aresta deve ser criada.
-      let nextSelectedNodeIdForAlgo = selectedNodeIdForAlgorithm; // Começa com o valor atual
+      let nextSelectedNodeIdForAlgoValue = prevSelectedNodeIdForAlgo;
+      let edgeWasFormed = false;
 
-      if (nextNodesForEdge.length === 2) {
-        const [from, to] = nextNodesForEdge;
+      if (nextNodesForEdgeArray.length === 2) {
+        const [from, to] = nextNodesForEdgeArray;
         addEdgeToDataSet(from, to);
-        nextSelectedNodeIdForAlgo = clickedNodeId; // O último nó clicado se torna o de algoritmo
-        // Imediatamente após adicionar a aresta, resetamos a seleção para a próxima aresta
-        setNodesForNewEdge([]); // Atualiza o estado para a próxima renderização
-        // Para a atualização visual IMEDIATA, usaremos um array vazio para newSelectionForEdge
-        // A atualização visual abaixo usará `[]` para newSelectionForEdge e nextSelectedNodeIdForAlgo
-        nodes.getIds().forEach((id) => {
-          if (id === nextSelectedNodeIdForAlgo) {
-            updateNodeColorVisuals(
-              id,
-              SELECTED_NODE_COLOR_ALGORITHM,
-              SELECTED_NODE_BORDER_ALGORITHM
-            );
-          } else {
-            updateNodeColorVisuals(
-              id,
-              DEFAULT_NODE_COLOR,
-              DEFAULT_NODE_BORDER_COLOR
-            );
-          }
-        });
-        setSelectedNodeIdForAlgorithm(nextSelectedNodeIdForAlgo);
+        nextSelectedNodeIdForAlgoValue = clickedNodeId; // O último nó clicado (que formou a aresta) se torna o selecionado para algoritmo
+        // O estado de `nodesForNewEdge` será atualizado para [] abaixo
+        edgeWasFormed = true;
+      } else if (nextNodesForEdgeArray.length === 1) {
+        nextSelectedNodeIdForAlgoValue = nextNodesForEdgeArray[0]; // O único nó na seleção de aresta também é o de algoritmo
       } else {
-        // Se não formou uma aresta completa, atualiza os estados e os visuais
-        if (nextNodesForEdge.length === 1) {
-          nextSelectedNodeIdForAlgo = nextNodesForEdge[0];
+        // Se a seleção de aresta está vazia:
+        // Se o clique foi para desmarcar o 'clickedNodeId' (que era o único na seleção de aresta e talvez o de algoritmo)
+        if (
+          prevNodesForEdge.length === 1 &&
+          prevNodesForEdge[0] === clickedNodeId
+        ) {
+          nextSelectedNodeIdForAlgoValue = null; // Limpa a seleção de algoritmo
         } else {
-          // nextNodesForEdge.length === 0
-          // Se desmarcou o único nó que estava para aresta, ou clicou e não havia seleção
-          nextSelectedNodeIdForAlgo = clickedNodeId; // O nó clicado se torna o de algoritmo se a seleção de aresta está vazia
-          // Se o nó clicado era o único na seleção e foi desmarcado, nextNodesForEdge estará vazio.
-          // Nesse caso, clickedNodeId (que foi desmarcado) não deveria ser o nó de algoritmo.
-          // Se desmarcou o único, e nextNodesForEdge se tornou [], então o nó de algo deve ser null.
-          if (
-            currentNodesForEdge.length === 1 &&
-            currentNodesForEdge[0] === clickedNodeId &&
-            nextNodesForEdge.length === 0
-          ) {
-            nextSelectedNodeIdForAlgo = null;
-          }
+          // Senão, o nó clicado se torna o selecionado para algoritmo
+          nextSelectedNodeIdForAlgoValue = clickedNodeId;
         }
-        setNodesForNewEdge(nextNodesForEdge);
-        setSelectedNodeIdForAlgorithm(nextSelectedNodeIdForAlgo);
-
-        // Atualiza o visual de todos os nós com base nos estados calculados para este clique
-        nodes.getIds().forEach((id) => {
-          if (nextNodesForEdge.includes(id)) {
-            updateNodeColorVisuals(
-              id,
-              SELECTED_NODE_COLOR_EDGE_CREATION,
-              SELECTED_NODE_BORDER_EDGE_CREATION
-            );
-          } else if (id === nextSelectedNodeIdForAlgo) {
-            updateNodeColorVisuals(
-              id,
-              SELECTED_NODE_COLOR_ALGORITHM,
-              SELECTED_NODE_BORDER_ALGORITHM
-            );
-          } else {
-            updateNodeColorVisuals(
-              id,
-              DEFAULT_NODE_COLOR,
-              DEFAULT_NODE_BORDER_COLOR
-            );
-          }
-        });
       }
+
+      // Atualiza os estados do React
+      setNodesForNewEdge(edgeWasFormed ? [] : nextNodesForEdgeArray);
+      setSelectedNodeIdForAlgorithm(nextSelectedNodeIdForAlgoValue);
+
+      const nodesToUpdateVisuals = new Set<IdType>();
+
+      // 1. Nós que ESTAVAM selecionados (para aresta ou algoritmo)
+      prevNodesForEdge.forEach((id) => nodesToUpdateVisuals.add(id));
+      if (prevSelectedNodeIdForAlgo)
+        nodesToUpdateVisuals.add(prevSelectedNodeIdForAlgo);
+
+      // 2. Nós que ESTÃO selecionados AGORA (para aresta ou algoritmo)
+      // Usa `nextNodesForEdgeArray` para a seleção de aresta atual (antes de ser resetada se edgeWasFormed)
+      // Se uma aresta foi formada, a seleção de `nodesForNewEdge` efetivamente se torna vazia para este ciclo visual.
+      const currentVisualEdgeSelection = edgeWasFormed
+        ? []
+        : nextNodesForEdgeArray;
+      currentVisualEdgeSelection.forEach((id) => nodesToUpdateVisuals.add(id));
+      if (nextSelectedNodeIdForAlgoValue)
+        nodesToUpdateVisuals.add(nextSelectedNodeIdForAlgoValue);
+
+      // 3. O nó clicado sempre precisa ser reavaliado
+      nodesToUpdateVisuals.add(clickedNodeId);
+
+      // Aplica as atualizações visuais apenas aos nós identificados
+      nodesToUpdateVisuals.forEach((nodeId) => {
+        if (currentVisualEdgeSelection.includes(nodeId)) {
+          updateNodeColorVisuals(
+            nodeId,
+            SELECTED_NODE_COLOR_EDGE_CREATION,
+            SELECTED_NODE_BORDER_EDGE_CREATION,
+          );
+        } else if (nodeId === nextSelectedNodeIdForAlgoValue) {
+          updateNodeColorVisuals(
+            nodeId,
+            SELECTED_NODE_COLOR_ALGORITHM,
+            SELECTED_NODE_BORDER_ALGORITHM,
+          );
+        } else {
+          updateNodeColorVisuals(
+            nodeId,
+            DEFAULT_NODE_COLOR,
+            DEFAULT_NODE_BORDER_COLOR,
+          );
+        }
+      });
     },
     [
       isAlgorithmRunning,
-      nodes,
-      edges, // edges pode ser necessário se addEdgeToDataSet tivesse efeitos colaterais visuais lidos aqui
+      nodesForNewEdge,
+      selectedNodeIdForAlgorithm,
       addEdgeToDataSet,
       updateNodeColorVisuals,
-      nodesForNewEdge, // Precisa ler o estado atual para calcular o próximo
-      selectedNodeIdForAlgorithm, // Precisa ler o estado atual
-      // setSelectedNodeIdForAlgorithm e setNodesForNewEdge não são dependências de useCallback
-    ]
+    ],
   );
 
   const clearNodeSelectionForEdgeUI = useCallback(() => {
@@ -181,7 +175,7 @@ export function useGraphInteractions({
         updateNodeColorVisuals(
           id,
           DEFAULT_NODE_COLOR,
-          DEFAULT_NODE_BORDER_COLOR
+          DEFAULT_NODE_BORDER_COLOR,
         );
       }
     });
@@ -194,20 +188,16 @@ export function useGraphInteractions({
         console.warn("runAlgorithm: Algoritmo já em execução.");
         return;
       }
-
-      const requiresStartNode = !(algorithmKey === "CONNECTED_COMPONENTS");
+      const requiresStartNode = algorithmKey !== "CONNECTED_COMPONENTS";
       if (requiresStartNode && !selectedNodeIdForAlgorithm) {
         setAlgorithmResultMessage(
-          "Por favor, selecione um nó inicial para este algoritmo."
+          "Por favor, selecione um nó inicial para este algoritmo.",
         );
-        // alert("Por favor, selecione um nó inicial para este algoritmo."); // Alert pode ser intrusivo
         return;
       }
-
       setAlgorithmResultMessage(null);
-      if (activeAlgorithmCleanupRef.current) {
+      if (activeAlgorithmCleanupRef.current)
         activeAlgorithmCleanupRef.current();
-      }
 
       utilResetAllVisuals(nodes, edges);
       setNodesForNewEdge([]);
@@ -217,22 +207,19 @@ export function useGraphInteractions({
         updateNodeColorVisuals(
           selectedNodeIdForAlgorithm,
           "lightgreen",
-          "green"
+          "green",
         );
       }
 
       const algoOptions = {
         animationSpeed: ANIMATION_SPEED_MS,
-        updateNodeVisual: (id: IdType, updates: Partial<CustomNode>) => {
-          utilUpdateNodeVisual(nodes, id, updates);
-        },
-        updateEdgeVisual: (id: string, updates: Partial<CustomEdge>) => {
-          utilUpdateEdgeVisual(edges, id, updates);
-        },
+        updateNodeVisual: (id: IdType, updates: Partial<CustomNode>) =>
+          utilUpdateNodeVisual(nodes, id, updates),
+        updateEdgeVisual: (id: string, updates: Partial<CustomEdge>) =>
+          utilUpdateEdgeVisual(edges, id, updates),
         onAlgorithmComplete: (result?: unknown) => {
           setIsAlgorithmRunning(false);
           activeAlgorithmCleanupRef.current = null;
-
           let message = `${algorithmKey} concluído.`;
           if (typeof result === "object" && result !== null) {
             if (
@@ -245,9 +232,7 @@ export function useGraphInteractions({
               "count" in result &&
               typeof (result as { count: number }).count === "number"
             ) {
-              message = `Encontrados ${
-                (result as { count: number }).count
-              } componente(s) conectado(s).`;
+              message = `Encontrados ${(result as { count: number }).count} componente(s) conectado(s).`;
             } else if (
               algorithmKey === "CYCLE_DETECTION" &&
               "found" in result &&
@@ -257,30 +242,26 @@ export function useGraphInteractions({
                 ? `Alerta: Um ciclo foi detectado!`
                 : `Nenhum ciclo detectado a partir do nó inicial.`;
             }
-          } else if (result !== undefined) {
+          } else if (result !== undefined)
             message += ` Resultado: ${String(result)}`;
-          }
           setAlgorithmResultMessage(message);
-
           if (selectedNodeIdForAlgorithm && requiresStartNode) {
             updateNodeColorVisuals(
               selectedNodeIdForAlgorithm,
               SELECTED_NODE_COLOR_ALGORITHM,
-              SELECTED_NODE_BORDER_ALGORITHM
+              SELECTED_NODE_BORDER_ALGORITHM,
             );
           }
         },
       };
-
       const execution = algorithm(
         nodes,
         edges,
         selectedNodeIdForAlgorithm,
-        algoOptions
+        algoOptions,
       );
-      if (execution && typeof execution.cleanup === "function") {
+      if (execution && typeof execution.cleanup === "function")
         activeAlgorithmCleanupRef.current = execution.cleanup;
-      }
     },
     [
       isAlgorithmRunning,
@@ -288,8 +269,7 @@ export function useGraphInteractions({
       nodes,
       edges,
       updateNodeColorVisuals,
-      // setAlgorithmResultMessage não é uma dependência direta do useCallback, mas é usado internamente
-    ]
+    ],
   );
 
   const stopCurrentAlgorithm = useCallback(() => {
@@ -299,37 +279,21 @@ export function useGraphInteractions({
     }
     setIsAlgorithmRunning(false);
     utilResetAllVisuals(nodes, edges);
-
-    // Mantém o nó de algoritmo selecionado, se houver, e sua cor de seleção
     if (selectedNodeIdForAlgorithm) {
       updateNodeColorVisuals(
         selectedNodeIdForAlgorithm,
         SELECTED_NODE_COLOR_ALGORITHM,
-        SELECTED_NODE_BORDER_ALGORITHM
+        SELECTED_NODE_BORDER_ALGORITHM,
       );
-    } else {
-      // Se não havia nó de algoritmo selecionado, garante que tudo está no padrão
-      nodes
-        .getIds()
-        .forEach((id) =>
-          updateNodeColorVisuals(
-            id,
-            DEFAULT_NODE_COLOR,
-            DEFAULT_NODE_BORDER_COLOR
-          )
-        );
     }
     setNodesForNewEdge([]);
-    setAlgorithmResultMessage(
-      "Execução do algoritmo interrompida pelo usuário."
-    );
+    setAlgorithmResultMessage("Execução finalizada.");
   }, [nodes, edges, selectedNodeIdForAlgorithm, updateNodeColorVisuals]);
 
   useEffect(() => {
     return () => {
-      if (activeAlgorithmCleanupRef.current) {
+      if (activeAlgorithmCleanupRef.current)
         activeAlgorithmCleanupRef.current();
-      }
     };
   }, []);
 
